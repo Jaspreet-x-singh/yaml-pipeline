@@ -1,0 +1,10 @@
+steps:
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: 'ARM Template deployment: Resource Group scope'
+  inputs:
+    azureResourceManagerConnection: 'jaspreetcicd-pipeline'
+    subscriptionId: 'fb6a2509-44c9-4448-a124-ecb166972aae'
+    resourceGroupName: 'CI-CD'
+    location: 'Australia East'
+    csmFile: Infrastructure/azuredeploy.json
+    csmParametersFile: Infrastructure/azuredeploy.parameters.json

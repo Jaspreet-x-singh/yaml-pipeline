@@ -1,0 +1,1 @@
+New-AzResourceGroupDeployment -ResourceGroupName iac -TemplateFile .\Infrastructure\azuredeploy.json -TemplateParameterFile .\Infrastructure\azuredeploy.parameters.json

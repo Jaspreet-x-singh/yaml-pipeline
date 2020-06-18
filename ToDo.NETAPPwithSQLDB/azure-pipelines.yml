@@ -1,0 +1,75 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+      vmImage: 'windows-latest'
+
+variables:
+    solution: '**/*.sln'
+    buildConfiguration: 'Release'
+
+steps:
+
+- task: NuGetToolInstaller@0
+  displayName: 'Use NuGet 4.4.1'
+  inputs:
+    versionSpec: 4.4.1
+
+- task: NuGetCommand@2
+  displayName: 'NuGet restore'
+  inputs:
+    restoreSolution: '$(solution)'
+
+# Build the code into solution
+- task: VSBuild@1
+  displayName: 'Build solution'
+  inputs:
+    solution: '$(solution)'
+    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactstagingdirectory)\\"'
+    platform: 
+    configuration: '$(BuildConfiguration)'
+
+- task: PublishSymbols@2
+  displayName: 'Publish symbols path'
+  inputs:
+    SearchPattern: '**\bin\**\*.pdb'
+    PublishSymbols: false
+  continueOnError: true
+
+# Publish the artifacts 
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+    ArtifactName: '$(Parameters.ArtifactName)'
+  condition: succeededOrFailed()
+
+# Create the application environment using json templates
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: 'ARM Template deployment: Resource Group scope'
+  inputs:
+    azureResourceManagerConnection: 'Enter-Your-AzureDevOps-Service-Connection'
+    subscriptionId: 'Enter-Your-Sub-ID'
+    resourceGroupName: 'yaml'
+    location: 'Australia East'
+    csmFile: Infrastructure/azuredeploy.json
+    csmParametersFile: Infrastructure/azuredeploy.parameters.json
+
+# Download Artifact Before deploying to WebApp
+- task: DownloadPipelineArtifact@2
+  displayName: 'Download Pipeline Artifact'
+  inputs:
+    itemPattern: '**\*.zip'
+
+# Deploy the WebApp to Azure WebApp Service
+- task: AzureRmWebAppDeployment@4
+  displayName: 'Azure App Service Deploy: jaspreetyamlwebSite'
+  inputs:
+    azureSubscription: 'Enter-Your-AzureDevOps-Service-Connection'
+    WebAppName: jaspreetyamlwebSite
+    package: 'D:\a\1\$(Parameters.ArtifactName)\DotNetAppSqlDb.zip'
