@@ -6,7 +6,7 @@
         "value": "sqladmin"
       },
       "sqlAdministratorLoginPassword": {		
-        "value": "IamAzureExpert123"		
+        "value": "Database-Password"		
       }		
     }
   }
